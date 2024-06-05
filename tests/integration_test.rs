@@ -22,13 +22,14 @@ fn test_main_little_lamb_poem() {
 
 #[test]
 fn test_main_little_lamb_poem_with_stopwords() {
+    let stop_words = br#"the
+a
+on
+off
+"#;
+
     let mut file = File::create("stopwords.txt").expect("cannot create file");
-    file.write_all(br#"
-    the
-    a
-    on
-    off
-    "#).expect("cannot write file");
+    file.write_all(stop_words).expect("cannot write file");
 
     let mut child = Command::new("cargo")
         .arg("run")

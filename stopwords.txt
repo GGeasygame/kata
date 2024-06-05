@@ -1,6 +1,4 @@
-
-    the
-    a
-    on
-    off
-    
+the
+a
+on
+off
