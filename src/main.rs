@@ -4,7 +4,7 @@ use wordcount::count_words;
 fn main() {
     print!("Enter text: ");
     let s = read_user_input();
-    println!("Number of words: {}", count_words(&s))
+    println!("Number of words: {}", count_words(&s, ))
 }
 
 fn read_user_input() -> String {
