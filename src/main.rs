@@ -1,15 +1,28 @@
-use std::fs;
+use std::{env, fs};
 use std::io::{stdin, stdout, Write};
 
 use wordcount::count_words;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let s: String;
+    if args.len() > 1 {
+        let text_file_path = &args[1];
+        s = read_text_txt(text_file_path)
+    } else {
+        print!("Enter text: ");
+        s = read_user_input();
+    }
+
     let stopwords = read_stopwords_txt();
-    print!("Enter text: ");
-    let s = read_user_input();
+
     println!("Number of words: {}", count_words(&s, stopwords.iter().map(|s| s.as_str()).collect()))
 }
 
+fn read_text_txt(path: &str) -> String {
+    fs::read_to_string(path).unwrap_or_else(|_| String::new())
+}
 
 fn read_stopwords_txt() -> Vec<String> {
     match fs::read_to_string("./stopwords.txt") {
