@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process::{Child, Command, Stdio};
@@ -45,6 +46,8 @@ off
     }
 
     assert_output("Enter text: Number of words: 4\n", child);
+
+    fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
 }
 
 fn assert_output(expected: &str, child: Child) {
