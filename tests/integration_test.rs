@@ -20,7 +20,7 @@ fn test_main_little_lamb_poem() {
         stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 5, unique: 5\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters\n", read_output(child));
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_main_duplicate_words() {
         stdin.write_all(b"there are duplicates in this text, try to find them in the text!").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 13, unique: 11\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 13, unique: 11; average word length: 3.85 characters\n", read_output(child));
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_main_words_with_hyphens() {
         stdin.write_all(b"Humpty-Dumpty sat on a wall. Humpty-Dumpty had a great fall.").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 10, unique: 8\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 10, unique: 8; average word length: 4.90 characters\n", read_output(child));
 }
 
 #[test]
@@ -89,7 +89,7 @@ off
     let output  = read_output(child);
     fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Enter text: Number of words: 4, unique: 4\n", output)
+    assert_eq!("Enter text: Number of words: 4, unique: 4; average word length: 4.50 characters\n", output)
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn test_main_little_lamb_poem_in_file() {
     let output = read_output(child);
     fs::remove_file("text.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Number of words: 5, unique: 5\n", output);
+    assert_eq!("Number of words: 5, unique: 5; average word length: 3.80 characters\n", output);
 
 }
 

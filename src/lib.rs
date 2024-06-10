@@ -22,6 +22,20 @@ pub fn count_unique_words(text: &str, stop_list: Vec<String>) -> i32 {
     ).len() as i32
 }
 
+pub fn calculate_average_characters_of_words(text: &str, stop_list: Vec<String>) -> f32 {
+    let filter_set: HashSet<_> = stop_list.into_iter().collect();
+    let re = Regex::new(r"[a-zA-Z-]+").unwrap();
+
+    let matches: Vec<_> = re.find_iter(text)
+        .filter(
+            |regex_match| !filter_set.contains(regex_match.as_str())
+        ).collect();
+    match matches.clone().into_iter().map(|regex_match| regex_match.len()).reduce(|acc, curr| acc + curr) {
+        Some(value) => (value as f32) / (matches.len() as f32),
+        None => 0f32
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +78,10 @@ mod tests {
     #[test]
     fn test_count_unique_words_with_hyphens() {
         assert_eq!(8, count_unique_words("Humpty-Dumpty sat on a wall. Humpty-Dumpty had a great fall.", vec![]))
+    }
+
+    #[test]
+    fn test_calculate_average_characters_of_words() {
+        assert_eq!(3.8, calculate_average_characters_of_words("marry had a little lamb", vec![]))
     }
 }

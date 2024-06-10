@@ -1,7 +1,7 @@
 use std::{env, fs};
 use std::io::{stdin, stdout, Write};
 
-use wordcount::{count_unique_words, count_words};
+use wordcount::{calculate_average_characters_of_words, count_unique_words, count_words};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -17,7 +17,10 @@ fn main() {
 
     let stopwords: Vec<_> = read_stopwords_txt();
 
-    println!("Number of words: {}, unique: {}", count_words(&s, stopwords.clone()), count_unique_words(&s, stopwords.clone()))
+    println!("Number of words: {}, unique: {}; average word length: {:.2} characters",
+             count_words(&s, stopwords.clone()),
+             count_unique_words(&s, stopwords.clone()),
+             calculate_average_characters_of_words(&s, stopwords.clone()))
 }
 
 fn read_text_txt(path: &str) -> String {
