@@ -2,22 +2,68 @@ use std::{env, fs};
 use std::collections::HashSet;
 use std::io::{stdin, stdout, Write};
 
-use wordcount::{calculate_average_characters_of_words, count_unique_words, count_words};
+use wordcount::{calculate_average_characters_of_words, count_unique_words, count_words, get_indexed_words};
 
 
 const STOPWORDS_FILE_PATH: &str = "./stopwords.txt";
 
+struct Args {
+    args: Vec<String>,
+}
+
+impl Args {
+    fn new(args: Vec<String>) -> Self {
+        Args { args }
+    }
+
+    fn get_text_file_path(&self) -> Option<&String> {
+        for arg in &self.args[1..] {
+            if fs::metadata(arg).is_ok() {
+                return Some(arg);
+            }
+        }
+        None
+    }
+
+    fn has_index_flag(&self) -> bool {
+        for arg in &self.args[1..] {
+            if arg.eq("-index") {
+                return true;
+            }
+        }
+        false
+    }
+}
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let input_text = get_input_text(&args.get(1));
+    let arg_vec: Vec<_> = env::args().collect();
+    let args: Args = Args::new(arg_vec);
+    let input_text = get_input_text(&args.get_text_file_path());
 
     let stopwords: HashSet<_> = read_stopwords_txt();
 
-    println!("Number of words: {}, unique: {}; average word length: {:.2} characters",
-             count_words(&input_text, &stopwords),
-             count_unique_words(&input_text, &stopwords),
-             calculate_average_characters_of_words(&input_text, &stopwords))
+    let mut indexed_words: Option<Vec<String>> = None;
+    if args.has_index_flag() {
+        indexed_words = Option::from(get_indexed_words(&input_text, &stopwords));
+    }
+
+    print!("{}", get_output(count_words(&input_text, &stopwords),
+                            count_unique_words(&input_text, &stopwords),
+                            calculate_average_characters_of_words(&input_text, &stopwords),
+                            &indexed_words));
 }
+
+fn get_output(amount_words: i32, amount_unique_words: i32, average_characters_of_words: f32, indexed_words: &Option<Vec<String>>) -> String {
+    let mut output = format!("Number of words: {}, unique: {}; average word length: {:.2} characters",
+                             amount_words, amount_unique_words, average_characters_of_words);
+    if let Some(words) = indexed_words {
+        output += "\nIndex:";
+        let indexes: String = words.iter().map(|word| format!("\n{}", word)).collect();
+        output += &indexes
+    }
+    output
+}
+
 
 fn get_input_text(text_file_path: &Option<&String>) -> String {
     match text_file_path {

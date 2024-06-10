@@ -20,7 +20,7 @@ fn test_main_little_lamb_poem() {
         stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters", read_output(child));
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_main_duplicate_words() {
         stdin.write_all(b"there are duplicates in this text, try to find them in the text!").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 13, unique: 11; average word length: 3.85 characters\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 13, unique: 11; average word length: 3.85 characters", read_output(child));
 }
 
 #[test]
@@ -58,7 +58,35 @@ fn test_main_words_with_hyphens() {
         stdin.write_all(b"Humpty-Dumpty sat on a wall. Humpty-Dumpty had a great fall.").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 10, unique: 8; average word length: 4.90 characters\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 10, unique: 8; average word length: 4.90 characters", read_output(child));
+}
+
+#[test]
+#[parallel]
+fn test_main_with_index_arg() {
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("main.rs")
+        .arg("-index")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
+    }
+
+    assert_eq!(r#"Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters
+Index:
+a
+had
+lamb
+little
+marry"#,
+        read_output(child));
 }
 
 #[test]
@@ -86,10 +114,10 @@ off
         stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
     }
 
-    let output  = read_output(child);
+    let output = read_output(child);
     fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Enter text: Number of words: 4, unique: 4; average word length: 4.50 characters\n", output)
+    assert_eq!("Enter text: Number of words: 4, unique: 4; average word length: 4.50 characters", output)
 }
 
 #[test]
@@ -112,10 +140,49 @@ fn test_main_little_lamb_poem_in_file() {
     let output = read_output(child);
     fs::remove_file("text.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Number of words: 5, unique: 5; average word length: 3.80 characters\n", output);
-
+    assert_eq!("Number of words: 5, unique: 5; average word length: 3.80 characters", output);
 }
 
+#[test]
+#[serial]
+fn test_main_with_index_arg_and_file_and_stopwords() {
+    let stop_words = br#"the
+a
+on
+off
+"#;
+
+    let poem = b"marry had a little lamb";
+
+    let mut file = File::create("text.txt").expect("cannot create file");
+    file.write_all(poem).expect("cannot write file");
+
+
+    let mut file = File::create("stopwords.txt").expect("cannot create file");
+    file.write_all(stop_words).expect("cannot write file");
+
+    let child = Command::new("cargo")
+        .arg("run")
+        .arg("main.rs")
+        .arg("text.txt")
+        .arg("-index")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    let output = read_output(child);
+    fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
+    fs::remove_file("text.txt").expect("could not remove stopwords.txt");
+
+    assert_eq!(r#"Number of words: 4, unique: 4; average word length: 4.50 characters
+Index:
+had
+lamb
+little
+marry"#, output)
+}
 
 fn read_output(child: Child) -> String {
     let enter_text_prompt = child.wait_with_output().expect("no stdout received");

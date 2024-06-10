@@ -11,8 +11,8 @@ pub fn count_words(text: &String, stop_list: &HashSet<String>) -> i32 {
 
 pub fn count_unique_words(text: &String, stop_list: &HashSet<String>) -> i32 {
     let regex = Regex::new(WORD_REGEX).unwrap();
-   HashSet::<&str>::from_iter(
-       find_matches(text, stop_list, &regex)
+    HashSet::<&str>::from_iter(
+        find_matches(text, stop_list, &regex)
             .map(|regex_match| regex_match.as_str())
     ).len() as i32
 }
@@ -26,7 +26,15 @@ pub fn calculate_average_characters_of_words(text: &String, stop_list: &HashSet<
     }
 }
 
-fn find_matches<'a>(text: &'a String, stop_list: &'a HashSet<String>, regex: &'a Regex) -> impl Iterator<Item = Match<'a>> + 'a {
+pub fn get_indexed_words(text: &String, stop_list: &HashSet<String>) -> Vec<String> {
+    let regex = Regex::new(WORD_REGEX).unwrap();
+    let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
+        .map(|regex_match| regex_match.as_str().to_string()));
+    matches.sort();
+    matches
+}
+
+fn find_matches<'a>(text: &'a String, stop_list: &'a HashSet<String>, regex: &'a Regex) -> impl Iterator<Item=Match<'a>> + 'a {
     regex.find_iter(text)
         .filter(
             move |regex_match| !stop_list.contains(regex_match.as_str())
@@ -54,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_count_words_with_stopwords() {
-        assert_eq!(4, count_words(&"marry had a little lamb".to_string(), &["the", "a", "on", "off"].iter().map(|s| { s.to_string()}).collect()))
+        assert_eq!(4, count_words(&"marry had a little lamb".to_string(), &["the", "a", "on", "off"].iter().map(|s| { s.to_string() }).collect()))
     }
 
     #[test]
@@ -64,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_count_unique_words_with_duplicates_and_stop_words() {
-        assert_eq!(10, count_unique_words(&"there are duplicates in this text, try to find them in the text!".to_string(), &["the", "a", "on", "off"].iter().map(|s| { s.to_string()}).collect()))
+        assert_eq!(10, count_unique_words(&"there are duplicates in this text, try to find them in the text!".to_string(), &["the", "a", "on", "off"].iter().map(|s| { s.to_string() }).collect()))
     }
 
     #[test]
@@ -80,5 +88,10 @@ mod tests {
     #[test]
     fn test_calculate_average_characters_of_words() {
         assert_eq!(3.8, calculate_average_characters_of_words(&"marry had a little lamb".to_string(), &HashSet::new()))
+    }
+
+    #[test]
+    fn test_get_indexed_words() {
+        assert_eq!(vec!["a", "had", "lamb", "little", "marry"], get_indexed_words(&"marry had a little lamb".to_string(), &HashSet::new()))
     }
 }
