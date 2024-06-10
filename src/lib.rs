@@ -28,29 +28,26 @@ pub fn calculate_average_characters_of_words(text: &String, stop_list: &HashSet<
 
 pub fn get_indexed_words(text: &String, stop_list: &HashSet<String>, dictionary: &Option<HashSet<String>>) -> Vec<String> {
     let regex = Regex::new(WORD_REGEX).unwrap();
+    let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
+        .map(|regex_match| {
+            let word = regex_match.as_str().to_string();
+            word
+        }));
+    matches.sort();
+
     match dictionary {
-        Some(value) => {
-            let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
-                .map(|regex_match| {
-                    let word = regex_match.as_str().to_string();
-                    if !value.contains(&word) {
-                        return format!("{}*", word)
-                    }
-                    word
-                }));
-            matches.sort();
-            matches
-        }
-        None => {
-            let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
-                .map(|regex_match| {
-                    let word = regex_match.as_str().to_string();
-                    word
-                }));
-            matches.sort();
-            matches
-        }
+        Some(dict) => apply_dictionary(&mut matches, dict),
+        None => matches
     }
+}
+
+fn apply_dictionary(matches: &mut Vec<String>, dict: &HashSet<String>) -> Vec<String> {
+    matches.iter().map(|word| {
+        if !dict.contains(word) {
+            return format!("{}*", word)
+        }
+        word.to_string()
+    }).collect()
 }
 
 fn find_matches<'a>(text: &'a String, stop_list: &'a HashSet<String>, regex: &'a Regex) -> impl Iterator<Item=Match<'a>> + 'a {
