@@ -1,6 +1,7 @@
 use std::{env, fs};
 use std::collections::HashSet;
 use std::io::{stdin, stdout, Write};
+use regex::Regex;
 
 use wordcount::{calculate_average_characters_of_words, count_unique_words, count_words, get_indexed_words};
 
@@ -33,6 +34,20 @@ impl Args {
         }
         false
     }
+
+    fn get_dictionary_file_path(&self) -> Option<String> {
+        let regex = Regex::new(r"-dictionary=.+").unwrap();
+        for arg in &self.args[1..] {
+            if regex.is_match(arg) {
+                let path = arg.split("=").collect::<Vec<_>>()[1];
+                if fs::metadata(path).is_ok() {
+                    return Some(path.to_string());
+                }
+                return None
+            }
+        }
+        None
+    }
 }
 
 fn main() {
@@ -40,11 +55,11 @@ fn main() {
     let args: Args = Args::new(arg_vec);
     let input_text = get_input_text(&args.get_text_file_path());
 
-    let stopwords: HashSet<_> = read_stopwords_txt();
+    let stopwords: HashSet<_> = read_stopwords_file();
 
     let mut indexed_words: Option<Vec<String>> = None;
     if args.has_index_flag() {
-        indexed_words = Option::from(get_indexed_words(&input_text, &stopwords));
+        indexed_words = Option::from(get_indexed_words(&input_text, &stopwords, &get_dictionary_from_arg(args.get_dictionary_file_path())));
     }
 
     print!("{}", get_output(count_words(&input_text, &stopwords),
@@ -76,11 +91,22 @@ fn get_input_text(text_file_path: &Option<&String>) -> String {
 }
 
 fn read_text_file(path: &str) -> String {
+    dbg!(path);
     fs::read_to_string(path).unwrap_or_else(|_| String::new())
 }
 
-fn read_stopwords_txt() -> HashSet<String> {
+fn read_stopwords_file() -> HashSet<String> {
     read_text_file(STOPWORDS_FILE_PATH).split("\n").into_iter().map(|s| s.to_string()).collect()
+}
+
+fn get_dictionary_from_arg(arg: Option<String>) -> Option<HashSet<String>> {
+    arg.map_or(None, |file_path| {
+        Some(read_dictionary_file(&file_path))
+    })
+}
+
+fn read_dictionary_file(dictionary_file_path: &String) -> HashSet<String> {
+    read_text_file(dictionary_file_path).split("\n").into_iter().map(|s| s.to_string()).collect()
 }
 
 fn read_user_input() -> String {

@@ -86,7 +86,7 @@ had
 lamb
 little
 marry"#,
-        read_output(child));
+               read_output(child));
 }
 
 #[test]
@@ -182,6 +182,88 @@ had
 lamb
 little
 marry"#, output)
+}
+
+#[test]
+#[serial]
+fn test_main_with_index_arg_and_dictionary() {
+    let dict = br#"big
+small
+little
+cat
+dog
+have
+has
+had"#;
+
+    let mut file = File::create("dict.txt").expect("cannot create file");
+    file.write_all(dict).expect("cannot write file");
+
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("main.rs")
+        .arg("-index")
+        .arg("-dictionary=dict.txt")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
+    }
+
+    let output = read_output(child);
+    fs::remove_file("dict.txt").expect("could not remove stopwords.txt");
+
+    assert_eq!(r#"Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters
+Index:
+a*
+had
+lamb*
+little
+marry*"#,
+               output);
+}
+
+#[test]
+#[serial]
+fn test_main_with_dictionary() {
+    let dict = br#"
+big
+small
+little
+cat
+dog
+have
+has
+had"#;
+
+    let mut file = File::create("dict.txt").expect("cannot create file");
+    file.write_all(dict).expect("cannot write file");
+
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("main.rs")
+        .arg("-dictionary=dict.txt")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
+    }
+
+    let output = read_output(child);
+    fs::remove_file("dict.txt").expect("could not remove stopwords.txt");
+
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters",
+               output);
 }
 
 fn read_output(child: Child) -> String {

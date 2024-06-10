@@ -26,12 +26,31 @@ pub fn calculate_average_characters_of_words(text: &String, stop_list: &HashSet<
     }
 }
 
-pub fn get_indexed_words(text: &String, stop_list: &HashSet<String>) -> Vec<String> {
+pub fn get_indexed_words(text: &String, stop_list: &HashSet<String>, dictionary: &Option<HashSet<String>>) -> Vec<String> {
     let regex = Regex::new(WORD_REGEX).unwrap();
-    let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
-        .map(|regex_match| regex_match.as_str().to_string()));
-    matches.sort();
-    matches
+    match dictionary {
+        Some(value) => {
+            let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
+                .map(|regex_match| {
+                    let word = regex_match.as_str().to_string();
+                    if !value.contains(&word) {
+                        return format!("{}*", word)
+                    }
+                    word
+                }));
+            matches.sort();
+            matches
+        }
+        None => {
+            let mut matches = Vec::from_iter(find_matches(text, stop_list, &regex)
+                .map(|regex_match| {
+                    let word = regex_match.as_str().to_string();
+                    word
+                }));
+            matches.sort();
+            matches
+        }
+    }
 }
 
 fn find_matches<'a>(text: &'a String, stop_list: &'a HashSet<String>, regex: &'a Regex) -> impl Iterator<Item=Match<'a>> + 'a {
@@ -92,6 +111,11 @@ mod tests {
 
     #[test]
     fn test_get_indexed_words() {
-        assert_eq!(vec!["a", "had", "lamb", "little", "marry"], get_indexed_words(&"marry had a little lamb".to_string(), &HashSet::new()))
+        assert_eq!(vec!["a", "had", "lamb", "little", "marry"], get_indexed_words(&"marry had a little lamb".to_string(), &HashSet::new(), &None))
+    }
+
+    #[test]
+    fn test_get_indexed_words_with_dictionary() {
+        assert_eq!(vec!["a", "had", "lamb*", "little", "marry*"], get_indexed_words(&"marry had a little lamb".to_string(), &HashSet::new(), &Some(["a", "had", "little"].iter().map(|s| { s.to_string() }).collect())))
     }
 }
