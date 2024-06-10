@@ -20,8 +20,28 @@ fn test_main_little_lamb_poem() {
         stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 5\n", read_output(child));
+    assert_eq!("Enter text: Number of words: 5, unique: 5\n", read_output(child));
 }
+
+#[test]
+#[parallel]
+fn test_main_duplicate_words() {
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"there are duplicates in this text, try to find them in the text!").expect("stdin not writable");
+    }
+
+    assert_eq!("Enter text: Number of words: 13, unique: 11\n", read_output(child));
+}
+
 
 #[test]
 #[serial]
@@ -51,7 +71,7 @@ off
     let output  = read_output(child);
     fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Enter text: Number of words: 4\n", output)
+    assert_eq!("Enter text: Number of words: 4, unique: 4\n", output)
 }
 
 #[test]
@@ -74,9 +94,10 @@ fn test_main_little_lamb_poem_in_file() {
     let output = read_output(child);
     fs::remove_file("text.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Number of words: 5\n", output);
+    assert_eq!("Number of words: 5, unique: 5\n", output);
 
 }
+
 
 fn read_output(child: Child) -> String {
     let enter_text_prompt = child.wait_with_output().expect("no stdout received");
