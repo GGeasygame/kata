@@ -42,6 +42,24 @@ fn test_main_duplicate_words() {
     assert_eq!("Enter text: Number of words: 13, unique: 11\n", read_output(child));
 }
 
+#[test]
+#[parallel]
+fn test_main_words_with_hyphens() {
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"Humpty-Dumpty sat on a wall. Humpty-Dumpty had a great fall.").expect("stdin not writable");
+    }
+
+    assert_eq!("Enter text: Number of words: 10, unique: 8\n", read_output(child));
+}
 
 #[test]
 #[serial]
