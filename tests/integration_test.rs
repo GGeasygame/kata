@@ -1,6 +1,6 @@
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{stdin, Write};
 use std::process::{Child, Command, Stdio};
 use serial_test::{parallel, serial};
 
@@ -20,7 +20,7 @@ fn test_main_little_lamb_poem() {
         stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters", read_output(child));
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters\nEnter text: ", read_output(child));
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_main_duplicate_words() {
         stdin.write_all(b"there are duplicates in this text, try to find them in the text!").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 13, unique: 11; average word length: 3.85 characters", read_output(child));
+    assert_eq!("Enter text: Number of words: 13, unique: 11; average word length: 3.85 characters\nEnter text: ", read_output(child));
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_main_words_with_hyphens() {
         stdin.write_all(b"Humpty-Dumpty sat on a wall. Humpty-Dumpty had a great fall.").expect("stdin not writable");
     }
 
-    assert_eq!("Enter text: Number of words: 10, unique: 8; average word length: 4.90 characters", read_output(child));
+    assert_eq!("Enter text: Number of words: 10, unique: 8; average word length: 4.90 characters\nEnter text: ", read_output(child));
 }
 
 #[test]
@@ -85,8 +85,35 @@ a
 had
 lamb
 little
-marry"#,
+marry
+Enter text: "#,
                read_output(child));
+}
+
+#[test]
+#[parallel]
+fn test_main_multiple_inputs() {
+    let mut child = Command::new("cargo")
+        .arg("run")
+        .arg("--quiet")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("no output");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"marry had a little lamb").expect("stdin not writable");
+        stdin.flush()
+    }.expect("could not write to stdin");
+
+    {
+        let stdin = child.stdin.as_mut().expect("no stdin received");
+        stdin.write_all(b"this is the second text").expect("stdin not writable");
+        stdin.flush()
+    }.expect("could not write to stdin");
+
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters\nEnter text: ", read_output(child));
 }
 
 #[test]
@@ -117,7 +144,7 @@ off
     let output = read_output(child);
     fs::remove_file("stopwords.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Enter text: Number of words: 4, unique: 4; average word length: 4.50 characters", output)
+    assert_eq!("Enter text: Number of words: 4, unique: 4; average word length: 4.50 characters\nEnter text: ", output)
 }
 
 #[test]
@@ -216,6 +243,7 @@ had"#;
     }
 
     let output = read_output(child);
+
     fs::remove_file("dict.txt").expect("could not remove stopwords.txt");
 
     assert_eq!(r#"Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters
@@ -224,7 +252,8 @@ a*
 had
 lamb*
 little
-marry*"#,
+marry*
+Enter text: "#,
                output);
 }
 
@@ -262,7 +291,7 @@ had"#;
     let output = read_output(child);
     fs::remove_file("dict.txt").expect("could not remove stopwords.txt");
 
-    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters",
+    assert_eq!("Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters\nEnter text: ",
                output);
 }
 
