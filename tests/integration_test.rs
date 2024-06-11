@@ -1,6 +1,6 @@
 use std::fs;
 use std::fs::File;
-use std::io::{stdin, Write};
+use std::io::{Write};
 use std::process::{Child, Command, Stdio};
 use serial_test::{parallel, serial};
 
