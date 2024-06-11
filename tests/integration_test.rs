@@ -219,7 +219,7 @@ had"#;
     fs::remove_file("dict.txt").expect("could not remove stopwords.txt");
 
     assert_eq!(r#"Enter text: Number of words: 5, unique: 5; average word length: 3.80 characters
-Index:
+Index (unknown: 3):
 a*
 had
 lamb*
